@@ -268,25 +268,62 @@ Existing implemenation in Q.render
 
 \subsection{Optimization problem}
 
+\iffalse
 We only have square decomposition. We want to compute 
 more balanced decompositions in exploring rectangular decompositions. 
 Add illustrations with different splitting runtime  (examples you have)
+\fi
+
+The system which executes the rendering task can only do an $n\times n$ splitting with all resulted sub-images having the same size. However, in some cases, the rendering times for these sub-images  are highly inbalanced as shown in Fig.~\ref{decou_re}. The rendering times for the sub-images (in a top-down, left-right order) are 408, 713, 1516 and 1947 seconds respectively using the same number of samples. As these rendering tasks are preceded at the same time, the time for rendering is the maximum of these times. We want to reduce this rendering time by changing our splitting and obtaining more balanced rendering times. Although a more complicated way of splitting can be used in order to reduce the maximum rendering time, for implementation simplicity, we limit our solutions to a set of rectangle solutions, i.e., all resulted sub-images are in form of rectangles.
+
+
+\begin{figure}[htbp]
+\centerline{\includegraphics{decou_re}}
+\caption{Rendering with inbalanced times}
+\label{decou_re}
+\end{figure}
+
+
 
 \section{An adaptive approach} \label{TwoPhases}
 
 \subsection{Principle}
 
+\iffalse
 Explain that we will make a workload estimation and then we will compute the 
 balanced decomposition
 
 Picture that summarizes the approach
+\fi
+Our approach reduces the rendering time in a way similar to doing the trade-off between exploration and exploitation. Our approach procedes as follows: firstly, we do a fine-level estimation of rendering time of different parts of the image based on a fine-level splitting of it using a small number of samples and later we will show that this estimation is good enough; secondly, according to this estimation, we propose an splitting which can approximate the optimum rectangle solution. Fig.~\ref{grid} and Fig.~\ref{decou_irre} demonstrate these two steps. Our goal is to have the sum of estimation time and rendering time lower than the rendering time of a regular splitting as much as possible. 
+
+\begin{figure}[htbp]
+\centerline{\includegraphics{grid}}
+\caption{Fine-level rendering time estimation: after this step, we can obtain the rendering time of the small sub-images}
+\label{grid}
+\end{figure}
+
+\begin{figure}[htbp]
+\centerline{\includegraphics{decou_irre}}
+\caption{In the second step, we use a heuristic algorithm to find the optimal solution}
+\label{decou_irre}
+\end{figure}
 
 \subsection{Implementation model}
 
+\iffalse
 Explain how the principle is implemented with Q.ware. Mention software 
 components to develop.
 
 Explain the limits of the model (the scheduling will not necessarily be optimal ...)
+\fi
+
+The estimation is first implemented in a processor by launching rendering to the given image in the software Blender using a small number of samples. Blender renders an image on the level of small sub-images. We make use of this and retreive a good enough estimation of the rendering time for the case of a large number of samples of these fine-level sub-images. With this estimation of rendering time, we execute a heuristic algorithm to approximate the optimal solution to the problem. Then we send the parameters which can define the splitting to Q.ware, which dispatches the rendering tasks to processors. When the rendering of sub-images is finished, we retrieve them and compose them together using the software ImageMagick.
+
+Several factors may affect the efficiency of the model. Firstly, the scheduling in Q.ware may not be optimal and the resulted rendering times may not be as balanced as expected. Secondly, when the regular splitting fits well the pattern of the image, the model adds additional cost for the rendering task compared with the regular splitting model. 
+
+
+
 
 
 \subsection{Workload estimation}
